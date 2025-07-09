@@ -2,15 +2,15 @@ name: Update Domain IPs
 
 on:
   schedule:
-    - cron: '0 0 1 * *'
-  workflow_dispatch:
+    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
+  workflow_dispatch:     # 允许手动触发
 
 jobs:
   update-ips:
     runs-on: ubuntu-latest
     
     permissions:
-      contents: write  # 必须添加这个权限
+      contents: write  # 必须的写入权限
     
     steps:
     - name: Checkout repository
@@ -22,15 +22,25 @@ jobs:
     - name: Install dig
       run: sudo apt-get update && sudo apt-get install -y dnsutils
       
-    - name: Resolve domain and save IPs
+    - name: Resolve domain and format IPs
       run: |
+        # 替换为你想要解析的域名
         DOMAIN="cfip.xxxxxxxx.tk"
-        dig +short "$DOMAIN" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u > chaip.txt
+        
+        # 解析域名并处理输出
+        dig +short "$DOMAIN" | 
+        grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' |
+        sort -u |
+        awk '{print $0":80#cfip"NR}' > chaip.txt
+        
+        # 统计IP数量
+        COUNT=$(wc -l < chaip.txt | tr -d ' ')
+        echo "保存了 $COUNT 个格式化IP地址到 chaip.txt"
         
     - name: Commit and push changes
       run: |
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add chaip.txt
-        git diff --cached --quiet || git commit -m "Update IP addresses [skip ci]"
+        git diff --cached --quiet || git commit -m "更新IP地址列表 [skip ci]"
         git push
