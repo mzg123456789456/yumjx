@@ -2,18 +2,22 @@ name: Update Domain IPs
 
 on:
   schedule:
-    - cron: '0 0 * * *'
+    - cron: '0 0 1 * *'
   workflow_dispatch:
 
 jobs:
   update-ips:
     runs-on: ubuntu-latest
     
+    permissions:
+      contents: write  # 必须添加这个权限
+    
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
       with:
-        token: ${{ secrets.GITHUB_TOKEN }}
+        persist-credentials: true
+        fetch-depth: 0
       
     - name: Install dig
       run: sudo apt-get update && sudo apt-get install -y dnsutils
@@ -28,5 +32,5 @@ jobs:
         git config --global user.name "GitHub Actions"
         git config --global user.email "actions@github.com"
         git add chaip.txt
-        git diff --quiet && git diff --staged --quiet || git commit -m "Update IP addresses [skip ci]"
+        git diff --cached --quiet || git commit -m "Update IP addresses [skip ci]"
         git push
