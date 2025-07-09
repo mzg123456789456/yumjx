@@ -2,8 +2,8 @@ name: Update Domain IPs
 
 on:
   schedule:
-    - cron: '0 0 * * *'  # 每天UTC时间00:00运行
-  workflow_dispatch:     # 允许手动触发
+    - cron: '0 0 * * *'
+  workflow_dispatch:
 
 jobs:
   update-ips:
@@ -12,21 +12,16 @@ jobs:
     steps:
     - name: Checkout repository
       uses: actions/checkout@v4
+      with:
+        token: ${{ secrets.GITHUB_TOKEN }}
       
     - name: Install dig
       run: sudo apt-get update && sudo apt-get install -y dnsutils
       
-    - name: Resolve domain and save IPs (one per line)
+    - name: Resolve domain and save IPs
       run: |
-        # 替换为你想要解析的域名
         DOMAIN="cfip.xxxxxxxx.tk"
-        
-        # 使用dig解析域名并获取所有IP，每行一个
         dig +short "$DOMAIN" | grep -E '^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$' | sort -u > chaip.txt
-        
-        # 统计IP数量
-        COUNT=$(wc -l < chaip.txt | tr -d ' ')
-        echo "Found $COUNT unique IPs for $DOMAIN"
         
     - name: Commit and push changes
       run: |
