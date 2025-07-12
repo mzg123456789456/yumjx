@@ -25,7 +25,7 @@ jobs:
     - name: Resolve domain and format IPs
       run: |
         # 替换为你想要解析的域名
-        DOMAIN="cfip.xxxxxxxx.tk"
+        DOMAIN="cdncdncdn.aikunapp.com"
         
         # 解析域名并处理输出
         dig +short "$DOMAIN" | 
